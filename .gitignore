@@ -1,6 +1,20 @@
-settings.json
-requirements.txt
-
+# Datasets
 data/
+dataset/
 
+# Model weights
+*.pth
+*.pt
+*.ckpt
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Local settings
+settings.json
+
+# CLAUDE.md
 CLAUDE.md

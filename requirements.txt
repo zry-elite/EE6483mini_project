@@ -1,0 +1,10 @@
+# RTX 50 series (sm_120) requires CUDA 12.8 wheels
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+torch==2.11.0+cu128
+torchvision==0.26.0+cu128
+
+numpy==2.5.4
+pillow==13.0.0
+tqdm==4.70.1
+
