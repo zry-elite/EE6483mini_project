@@ -18,3 +18,7 @@ settings.json
 
 # CLAUDE.md
 CLAUDE.md
+analysis.md
+
+# Training outputs
+outputs/
