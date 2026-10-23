@@ -24,7 +24,50 @@ def set_seed(seed: int) -> None:
     torch.backends.cudnn.benchmark = False
 
 
-def train_one_epoch(model, loader, criterion, optimizer, scaler, device, amp):
+def mixup_batch(images, targets, alpha):
+    lam = random.betavariate(alpha, alpha)
+    index = torch.randperm(images.size(0), device=images.device)
+    mixed = lam * images + (1.0 - lam) * images[index]
+    return mixed, targets, targets[index], lam
+
+
+def cutmix_batch(images, targets, alpha):
+    lam = random.betavariate(alpha, alpha)
+    index = torch.randperm(images.size(0), device=images.device)
+    _, _, height, width = images.shape
+    cut_h = int(height * (1.0 - lam) ** 0.5)
+    cut_w = int(width * (1.0 - lam) ** 0.5)
+    center_y = random.randint(0, height - 1)
+    center_x = random.randint(0, width - 1)
+    y1 = max(center_y - cut_h // 2, 0)
+    y2 = min(center_y + cut_h // 2, height)
+    x1 = max(center_x - cut_w // 2, 0)
+    x2 = min(center_x + cut_w // 2, width)
+    mixed = images.clone()
+    mixed[:, :, y1:y2, x1:x2] = images[index, :, y1:y2, x1:x2]
+    lam = 1.0 - (y2 - y1) * (x2 - x1) / (height * width)
+    return mixed, targets, targets[index], lam
+
+
+def soft_cross_entropy(logits, targets_a, targets_b, lam):
+    log_probs = logits.float().log_softmax(dim=1)
+    loss_a = log_probs.gather(1, targets_a[:, None]).squeeze(1)
+    loss_b = log_probs.gather(1, targets_b[:, None]).squeeze(1)
+    return -(lam * loss_a + (1.0 - lam) * loss_b).mean()
+
+
+def train_one_epoch(
+    model,
+    loader,
+    criterion,
+    optimizer,
+    scaler,
+    device,
+    amp,
+    mixup_alpha=0.0,
+    cutmix_alpha=0.0,
+    mix_prob=0.0,
+):
     model.train()
     total_loss = 0.0
     correct = 0
@@ -34,9 +77,25 @@ def train_one_epoch(model, loader, criterion, optimizer, scaler, device, amp):
         images = images.to(device, non_blocking=True)
         targets = targets.to(device, non_blocking=True)
 
+        targets_a = targets_b = None
+        lam = 1.0
+        if mix_prob > 0.0 and random.random() < mix_prob:
+            use_mixup = random.random() < 0.5
+            if use_mixup and mixup_alpha > 0.0:
+                images, targets_a, targets_b, lam = mixup_batch(
+                    images, targets, mixup_alpha
+                )
+            elif not use_mixup and cutmix_alpha > 0.0:
+                images, targets_a, targets_b, lam = cutmix_batch(
+                    images, targets, cutmix_alpha
+                )
+
         optimizer.zero_grad(set_to_none=True)
         with autocast(device_type=device.type, dtype=torch.float16, enabled=amp):
             outputs = model(images)
+        if targets_a is not None:
+            loss = soft_cross_entropy(outputs, targets_a, targets_b, lam)
+        else:
             loss = criterion(outputs, targets)
 
         scaler.scale(loss).backward()
@@ -51,7 +110,7 @@ def train_one_epoch(model, loader, criterion, optimizer, scaler, device, amp):
 
 
 @torch.no_grad()
-def evaluate(model, loader, criterion, device, amp, num_classes):
+def evaluate(model, loader, criterion, device, amp, num_classes, tta="none"):
     model.eval()
     total_loss = 0.0
     correct = 0
@@ -66,7 +125,15 @@ def evaluate(model, loader, criterion, device, amp, num_classes):
             outputs = model(images)
             loss = criterion(outputs, targets)
 
-        preds = outputs.argmax(1)
+        preds = outputs.float().argmax(1)
+        if tta == "flip":
+            with autocast(device_type=device.type, dtype=torch.float16, enabled=amp):
+                flip_outputs = model(images.flip(-1))
+            probs = (
+                outputs.float().softmax(1) + flip_outputs.float().softmax(1)
+            ) / 2
+            preds = probs.argmax(1)
+
         total_loss += loss.item() * targets.size(0)
         correct += (preds == targets).sum().item()
         total += targets.size(0)
@@ -105,6 +172,88 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
     parser.add_argument("--amp", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument(
+        "--augment",
+        default="none",
+        help="Comma-separated augmentations: none | random_resized_crop | "
+        "color_jitter | random_erasing | horizontal_flip",
+    )
+    parser.add_argument(
+        "--rrc-scale",
+        nargs=2,
+        type=float,
+        default=(0.7, 1.0),
+        metavar=("MIN", "MAX"),
+        help="RandomResizedCrop scale range",
+    )
+    parser.add_argument(
+        "--color-jitter",
+        nargs=4,
+        type=float,
+        default=(0.2, 0.2, 0.2, 0.0),
+        metavar=("BRIGHTNESS", "CONTRAST", "SATURATION", "HUE"),
+        help="ColorJitter magnitudes",
+    )
+    parser.add_argument(
+        "--erasing-p",
+        type=float,
+        default=0.25,
+        help="RandomErasing probability",
+    )
+    parser.add_argument(
+        "--erasing-scale",
+        nargs=2,
+        type=float,
+        default=(0.02, 0.15),
+        metavar=("MIN", "MAX"),
+        help="RandomErasing erased area ratio range",
+    )
+    parser.add_argument(
+        "--hflip-p",
+        type=float,
+        default=0.5,
+        help="RandomHorizontalFlip probability",
+    )
+    parser.add_argument(
+        "--eval-tta",
+        choices=["none", "flip"],
+        default="none",
+        help="Test-time augmentation used for validation",
+    )
+    parser.add_argument(
+        "--mixup-alpha",
+        type=float,
+        default=0.0,
+        help="Mixup Beta alpha (0 disables)",
+    )
+    parser.add_argument(
+        "--cutmix-alpha",
+        type=float,
+        default=0.0,
+        help="CutMix Beta alpha (0 disables)",
+    )
+    parser.add_argument(
+        "--mix-prob",
+        type=float,
+        default=0.0,
+        help="Probability of applying Mixup or CutMix per batch",
+    )
+    parser.add_argument(
+        "--norm-mean",
+        nargs=3,
+        type=float,
+        default=(0.485, 0.456, 0.406),
+        metavar=("R", "G", "B"),
+        help="Normalization mean",
+    )
+    parser.add_argument(
+        "--norm-std",
+        nargs=3,
+        type=float,
+        default=(0.229, 0.224, 0.225),
+        metavar=("R", "G", "B"),
+        help="Normalization std",
+    )
     return parser.parse_args()
 
 
@@ -119,9 +268,29 @@ def main() -> None:
     amp = args.amp and device.type == "cuda"
 
     train_loader, val_loader, classes = build_dataloaders(
-        args.data_dir, args.batch_size, args.workers, args.seed
+        args.data_dir,
+        args.batch_size,
+        args.workers,
+        args.seed,
+        augment=args.augment,
+        rrc_scale=tuple(args.rrc_scale),
+        color_jitter=tuple(args.color_jitter),
+        erasing_p=args.erasing_p,
+        erasing_scale=tuple(args.erasing_scale),
+        hflip_p=args.hflip_p,
+        mean=tuple(args.norm_mean),
+        std=tuple(args.norm_std),
     )
-    print(f"device={device} amp={amp} classes={classes}")
+    print(
+        f"device={device} amp={amp} classes={classes} "
+        f"augment={args.augment} rrc_scale={tuple(args.rrc_scale)} "
+        f"color_jitter={tuple(args.color_jitter)} "
+        f"erasing_p={args.erasing_p} erasing_scale={tuple(args.erasing_scale)} "
+        f"hflip_p={args.hflip_p} eval_tta={args.eval_tta} "
+        f"mixup_alpha={args.mixup_alpha} cutmix_alpha={args.cutmix_alpha} "
+        f"mix_prob={args.mix_prob} norm_mean={tuple(args.norm_mean)} "
+        f"norm_std={tuple(args.norm_std)}"
+    )
     print(f"train={len(train_loader.dataset)} val={len(val_loader.dataset)}")
 
     model = build_model(num_classes=len(classes), pretrained=True).to(device)
@@ -149,10 +318,20 @@ def main() -> None:
             lr = optimizer.param_groups[0]["lr"]
 
             train_loss, train_acc = train_one_epoch(
-                model, train_loader, criterion, optimizer, scaler, device, amp
+                model,
+                train_loader,
+                criterion,
+                optimizer,
+                scaler,
+                device,
+                amp,
+                mixup_alpha=args.mixup_alpha,
+                cutmix_alpha=args.cutmix_alpha,
+                mix_prob=args.mix_prob,
             )
             val_loss, val_acc, _ = evaluate(
-                model, val_loader, criterion, device, amp, len(classes)
+                model, val_loader, criterion, device, amp, len(classes),
+                args.eval_tta,
             )
             scheduler.step()
 
@@ -180,7 +359,7 @@ def main() -> None:
     checkpoint = torch.load(best_path, map_location=device, weights_only=True)
     model.load_state_dict(checkpoint["model"])
     val_loss, val_acc, confusion = evaluate(
-        model, val_loader, criterion, device, amp, len(classes)
+        model, val_loader, criterion, device, amp, len(classes), args.eval_tta
     )
 
     print(f"\nbest epoch {best_epoch} | best val acc {best_acc:.4f}")

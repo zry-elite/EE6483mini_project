@@ -24,6 +24,12 @@ def main() -> None:
     parser.add_argument("--n-train", type=int, default=8000, help="images per class")
     parser.add_argument("--n-val", type=int, default=1000, help="images per class")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--val-src-dir",
+        type=Path,
+        default=None,
+        help="reuse an existing val split (e.g. dataset/base_1003/val) instead of sampling",
+    )
     parser.add_argument("--force", action="store_true", help="overwrite existing output")
     args = parser.parse_args()
 
@@ -37,7 +43,10 @@ def main() -> None:
 
     for split, per_class in plan.items():
         for cls in CLASSES:
-            src = args.src_dir / split / cls
+            if split == "val" and args.val_src_dir is not None:
+                src = args.val_src_dir / cls
+            else:
+                src = args.src_dir / split / cls
             if not src.is_dir():
                 raise SystemExit(f"source directory not found: {src}")
 
@@ -47,7 +56,10 @@ def main() -> None:
                     f"not enough images in {src}: {len(images)} < {per_class}"
                 )
 
-            selected = rng.sample(images, per_class)
+            if split == "val" and args.val_src_dir is not None:
+                selected = images
+            else:
+                selected = rng.sample(images, per_class)
             dst = args.out_dir / split / cls
             dst.mkdir(parents=True, exist_ok=True)
             for image in selected:
