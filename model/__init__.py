@@ -1,10 +1,16 @@
 from .efficientnet_b0 import EfficientNetB0Classifier, build_efficientnet_b0
-from .mobilenetv3_large import MobileNetV3LargeClassifier, build_large_model
+from .mobilenetv3_large import (
+    MobileNetV3LargeCIFARClassifier,
+    MobileNetV3LargeClassifier,
+    build_large_cifar_model,
+    build_large_model,
+)
 from .mobilenetv3_small import MobileNetV3SmallClassifier, build_model as build_small_model
 
 BACKBONES = {
     "mobilenet_v3_small": build_small_model,
     "mobilenet_v3_large": build_large_model,
+    "mobilenet_v3_large_cifar": build_large_cifar_model,
     "efficientnet_b0": build_efficientnet_b0,
 }
 
@@ -26,6 +32,7 @@ def build_model(
 __all__ = [
     "MobileNetV3SmallClassifier",
     "MobileNetV3LargeClassifier",
+    "MobileNetV3LargeCIFARClassifier",
     "EfficientNetB0Classifier",
     "build_model",
 ]
