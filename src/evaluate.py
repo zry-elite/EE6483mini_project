@@ -83,7 +83,10 @@ def main() -> None:
 
     checkpoint = torch.load(args.checkpoint, map_location=device, weights_only=True)
     classes = checkpoint["classes"]
-    model = build_model(num_classes=len(classes), pretrained=False).to(device)
+    backbone = checkpoint.get("args", {}).get("backbone", "mobilenet_v3_small")
+    model = build_model(
+        num_classes=len(classes), pretrained=False, backbone=backbone
+    ).to(device)
     model.load_state_dict(checkpoint["model"])
 
     loader, _ = build_eval_loader(

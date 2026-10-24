@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.amp import GradScaler, autocast
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -67,6 +68,9 @@ def train_one_epoch(
     mixup_alpha=0.0,
     cutmix_alpha=0.0,
     mix_prob=0.0,
+    teacher=None,
+    distill_temperature=3.0,
+    distill_alpha=0.5,
 ):
     model.train()
     total_loss = 0.0
@@ -97,6 +101,20 @@ def train_one_epoch(
             loss = soft_cross_entropy(outputs, targets_a, targets_b, lam)
         else:
             loss = criterion(outputs, targets)
+
+        if teacher is not None:
+            with torch.no_grad(), autocast(
+                device_type=device.type, dtype=torch.float16, enabled=amp
+            ):
+                teacher_logits = teacher(images)
+            temperature = distill_temperature
+            teacher_probs = (teacher_logits.float() / temperature).softmax(dim=1)
+            student_log_probs = (outputs.float() / temperature).log_softmax(dim=1)
+            kd_loss = (
+                F.kl_div(student_log_probs, teacher_probs, reduction="batchmean")
+                * temperature**2
+            )
+            loss = distill_alpha * loss + (1.0 - distill_alpha) * kd_loss
 
         scaler.scale(loss).backward()
         scaler.step(optimizer)
@@ -163,6 +181,11 @@ def parse_args():
     parser.add_argument("--data-dir", type=Path, default=Path("dataset/base_1003"))
     parser.add_argument(
         "--output-dir", type=Path, default=Path("outputs/base_1003_mobilenetv3_small")
+    )
+    parser.add_argument(
+        "--backbone",
+        choices=["mobilenet_v3_small", "mobilenet_v3_large", "efficientnet_b0"],
+        default="mobilenet_v3_small",
     )
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--batch-size", type=int, default=64)
@@ -254,6 +277,24 @@ def parse_args():
         metavar=("R", "G", "B"),
         help="Normalization std",
     )
+    parser.add_argument(
+        "--distill-checkpoint",
+        type=Path,
+        default=None,
+        help="Teacher checkpoint for knowledge distillation",
+    )
+    parser.add_argument(
+        "--distill-temperature",
+        type=float,
+        default=3.0,
+        help="Distillation softmax temperature",
+    )
+    parser.add_argument(
+        "--distill-alpha",
+        type=float,
+        default=0.5,
+        help="Weight of the hard-label loss (1-alpha goes to KD)",
+    )
     return parser.parse_args()
 
 
@@ -293,7 +334,31 @@ def main() -> None:
     )
     print(f"train={len(train_loader.dataset)} val={len(val_loader.dataset)}")
 
-    model = build_model(num_classes=len(classes), pretrained=True).to(device)
+    model = build_model(
+        num_classes=len(classes), pretrained=True, backbone=args.backbone
+    ).to(device)
+    num_params = sum(p.numel() for p in model.parameters())
+    print(f"backbone={args.backbone} params={num_params:,}")
+
+    teacher = None
+    if args.distill_checkpoint is not None:
+        teacher_ckpt = torch.load(
+            args.distill_checkpoint, map_location=device, weights_only=True
+        )
+        teacher_backbone = teacher_ckpt["args"].get(
+            "backbone", "mobilenet_v3_small"
+        )
+        teacher = build_model(
+            num_classes=len(classes), pretrained=False, backbone=teacher_backbone
+        ).to(device)
+        teacher.load_state_dict(teacher_ckpt["model"])
+        teacher.eval()
+        teacher.requires_grad_(False)
+        teacher_params = sum(p.numel() for p in teacher.parameters())
+        print(
+            f"teacher={teacher_backbone} params={teacher_params:,} "
+            f"T={args.distill_temperature} alpha={args.distill_alpha}"
+        )
     criterion = nn.CrossEntropyLoss()
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
@@ -328,6 +393,9 @@ def main() -> None:
                 mixup_alpha=args.mixup_alpha,
                 cutmix_alpha=args.cutmix_alpha,
                 mix_prob=args.mix_prob,
+                teacher=teacher,
+                distill_temperature=args.distill_temperature,
+                distill_alpha=args.distill_alpha,
             )
             val_loss, val_acc, _ = evaluate(
                 model, val_loader, criterion, device, amp, len(classes),
