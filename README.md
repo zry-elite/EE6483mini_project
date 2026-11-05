@@ -103,8 +103,7 @@ EE6483_Mini_Project/
 ├── data/                  # 原始数据（不入库）
 ├── dataset/               # 生成的训练子集（不入库）
 ├── outputs/               # 权重、指标、曲线（不入库）
-├── requirements.txt
-└── CLAUDE.md              # 项目详细说明
+└── requirements.txt
 ```
 
 ## 快速开始
