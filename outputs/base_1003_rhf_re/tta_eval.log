@@ -1,0 +1,7 @@
+checkpoint epoch 19 val_acc 0.9855 | split=val n=2000 tta=flip
+loss 0.0685 | plain acc 0.9855 | flip tta acc 0.9840 | preds changed 7
+
+tta predictions (rows=true, cols=pred)
+           cat     dog
+   cat     987      13   acc=0.9870
+   dog      19     981   acc=0.9810

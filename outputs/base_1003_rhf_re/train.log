@@ -1,0 +1,35 @@
+device=cuda amp=True classes=['cat', 'dog'] augment=random_resized_crop,horizontal_flip,random_erasing rrc_scale=(0.7, 1.0) color_jitter=(0.2, 0.2, 0.2, 0.0) erasing_p=0.25 erasing_scale=(0.02, 0.15) hflip_p=0.5 eval_tta=none
+train=16000 val=2000
+epoch 01/25 | train loss 0.1201 acc 0.9517 | val loss 0.2847 acc 0.9235 | lr 1.00e-03 | 37.2s
+epoch 02/25 | train loss 0.0735 acc 0.9724 | val loss 0.1456 acc 0.9445 | lr 9.96e-04 | 9.7s
+epoch 03/25 | train loss 0.0555 acc 0.9792 | val loss 0.1896 acc 0.9450 | lr 9.84e-04 | 9.9s
+epoch 04/25 | train loss 0.0444 acc 0.9828 | val loss 0.0863 acc 0.9690 | lr 9.65e-04 | 9.9s
+epoch 05/25 | train loss 0.0424 acc 0.9841 | val loss 0.0860 acc 0.9680 | lr 9.38e-04 | 10.0s
+epoch 06/25 | train loss 0.0369 acc 0.9872 | val loss 0.0881 acc 0.9655 | lr 9.05e-04 | 10.0s
+epoch 07/25 | train loss 0.0321 acc 0.9869 | val loss 0.0548 acc 0.9815 | lr 8.64e-04 | 10.2s
+epoch 08/25 | train loss 0.0228 acc 0.9923 | val loss 0.0906 acc 0.9680 | lr 8.19e-04 | 10.1s
+epoch 09/25 | train loss 0.0248 acc 0.9902 | val loss 0.0993 acc 0.9665 | lr 7.68e-04 | 10.0s
+epoch 10/25 | train loss 0.0225 acc 0.9915 | val loss 0.0740 acc 0.9760 | lr 7.13e-04 | 10.2s
+epoch 11/25 | train loss 0.0185 acc 0.9942 | val loss 0.1522 acc 0.9550 | lr 6.55e-04 | 10.1s
+epoch 12/25 | train loss 0.0153 acc 0.9938 | val loss 0.0849 acc 0.9740 | lr 5.94e-04 | 10.2s
+epoch 13/25 | train loss 0.0146 acc 0.9946 | val loss 0.0731 acc 0.9735 | lr 5.31e-04 | 10.2s
+epoch 14/25 | train loss 0.0113 acc 0.9960 | val loss 0.0693 acc 0.9770 | lr 4.69e-04 | 10.1s
+epoch 15/25 | train loss 0.0088 acc 0.9966 | val loss 0.0720 acc 0.9815 | lr 4.06e-04 | 10.1s
+epoch 16/25 | train loss 0.0071 acc 0.9978 | val loss 0.0627 acc 0.9815 | lr 3.45e-04 | 10.1s
+epoch 17/25 | train loss 0.0061 acc 0.9978 | val loss 0.0842 acc 0.9790 | lr 2.87e-04 | 10.2s
+epoch 18/25 | train loss 0.0060 acc 0.9978 | val loss 0.0640 acc 0.9805 | lr 2.32e-04 | 10.1s
+epoch 19/25 | train loss 0.0041 acc 0.9981 | val loss 0.0685 acc 0.9855 | lr 1.81e-04 | 10.1s
+epoch 20/25 | train loss 0.0053 acc 0.9980 | val loss 0.0686 acc 0.9830 | lr 1.36e-04 | 10.3s
+epoch 21/25 | train loss 0.0027 acc 0.9991 | val loss 0.0666 acc 0.9845 | lr 9.55e-05 | 10.2s
+epoch 22/25 | train loss 0.0032 acc 0.9991 | val loss 0.0655 acc 0.9835 | lr 6.18e-05 | 10.3s
+epoch 23/25 | train loss 0.0032 acc 0.9992 | val loss 0.0648 acc 0.9830 | lr 3.51e-05 | 10.1s
+epoch 24/25 | train loss 0.0025 acc 0.9989 | val loss 0.0649 acc 0.9840 | lr 1.57e-05 | 10.2s
+epoch 25/25 | train loss 0.0015 acc 0.9998 | val loss 0.0651 acc 0.9840 | lr 3.94e-06 | 10.2s
+
+best epoch 19 | best val acc 0.9855
+best checkpoint val acc 0.9855 loss 0.0685
+
+confusion matrix (rows=true, cols=pred)
+           cat     dog
+   cat     989      11   acc=0.9890
+   dog      18     982   acc=0.9820
