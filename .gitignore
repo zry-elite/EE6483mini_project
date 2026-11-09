@@ -3,9 +3,9 @@ data/
 dataset/
 
 # Model weights
-*.pth
-*.pt
-*.ckpt
+#*.pth
+#*.pt
+#*.ckpt
 
 # Python
 __pycache__/
