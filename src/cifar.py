@@ -50,6 +50,10 @@ def stratified_split(
     return train_idx, val_idx
 
 
+def has_split(cache, split: str) -> bool:
+    return f"{split}_images" in cache
+
+
 def compute_cifar_stats(
     data_dir: Path = Path("data/cifar10"),
     seed: int = 42,
@@ -57,10 +61,13 @@ def compute_cifar_stats(
     workers: int = 0,
 ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
     cache = load_cache(data_dir)
-    train_idx, _ = stratified_split(
-        cache["train_labels"].tolist(), val_per_class, seed
-    )
-    index = torch.tensor(train_idx)
+    if has_split(cache, "val"):
+        index = torch.arange(cache["train_labels"].numel())
+    else:
+        train_idx, _ = stratified_split(
+            cache["train_labels"].tolist(), val_per_class, seed
+        )
+        index = torch.tensor(train_idx)
     pixel_sum = torch.zeros(3, dtype=torch.float64)
     pixel_sq = torch.zeros(3, dtype=torch.float64)
     count = 0
@@ -94,6 +101,8 @@ def build_cifar10_eval_loader(
         ds = CifarCacheDataset(
             cache["test_images"], cache["test_labels"], transform
         )
+    elif split == "val" and has_split(cache, "val"):
+        ds = CifarCacheDataset(cache["val_images"], cache["val_labels"], transform)
     elif split == "val":
         full = CifarCacheDataset(
             cache["train_images"], cache["train_labels"], transform
@@ -146,21 +155,29 @@ def build_cifar10_dataloaders(
     )
 
     cache = load_cache(data_dir)
-    train_full = CifarCacheDataset(
-        cache["train_images"], cache["train_labels"], train_transform
-    )
-    val_full = CifarCacheDataset(
-        cache["train_images"], cache["train_labels"], eval_transform
-    )
     test_ds = CifarCacheDataset(
         cache["test_images"], cache["test_labels"], eval_transform
     )
 
-    train_idx, val_idx = stratified_split(
-        cache["train_labels"].tolist(), val_per_class, seed
-    )
-    train_ds = Subset(train_full, train_idx)
-    val_ds = Subset(val_full, val_idx)
+    if has_split(cache, "val"):
+        train_ds = CifarCacheDataset(
+            cache["train_images"], cache["train_labels"], train_transform
+        )
+        val_ds = CifarCacheDataset(
+            cache["val_images"], cache["val_labels"], eval_transform
+        )
+    else:
+        train_full = CifarCacheDataset(
+            cache["train_images"], cache["train_labels"], train_transform
+        )
+        val_full = CifarCacheDataset(
+            cache["train_images"], cache["train_labels"], eval_transform
+        )
+        train_idx, val_idx = stratified_split(
+            cache["train_labels"].tolist(), val_per_class, seed
+        )
+        train_ds = Subset(train_full, train_idx)
+        val_ds = Subset(val_full, val_idx)
 
     generator = torch.Generator()
     generator.manual_seed(seed)

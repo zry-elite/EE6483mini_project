@@ -1,0 +1,136 @@
+device=cuda amp=True classes=['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'] norm_mean=(0.4908, 0.4849, 0.4503) norm_std=(0.2457, 0.2419, 0.2622)
+train=25000 val=5000 test=10000
+backbone=mobilenet_v3_large_cifar params=4,214,842
+class_weights=inverse beta=0.9999
+  counts=[4500, 4500, 4500, 4500, 4500, 500, 500, 500, 500, 500]
+  weights=[0.5556, 0.5556, 0.5556, 0.5556, 0.5556, 5.0, 5.0, 5.0, 5.0, 5.0]
+epoch 001/100 | train loss 1.5037 acc 0.5746 | val loss 0.7880 acc 0.7896 | lr 1.00e-03 | 25.1s
+epoch 002/100 | train loss 1.3011 acc 0.6656 | val loss 0.5452 acc 0.8650 | lr 1.00e-03 | 12.4s
+epoch 003/100 | train loss 1.2016 acc 0.6872 | val loss 0.5340 acc 0.8382 | lr 9.99e-04 | 11.5s
+epoch 004/100 | train loss 1.1899 acc 0.7099 | val loss 0.6200 acc 0.8628 | lr 9.98e-04 | 12.8s
+epoch 005/100 | train loss 1.1497 acc 0.7384 | val loss 0.5697 acc 0.8628 | lr 9.96e-04 | 12.4s
+epoch 006/100 | train loss 1.1482 acc 0.7798 | val loss 0.4642 acc 0.8790 | lr 9.94e-04 | 12.1s
+epoch 007/100 | train loss 1.0848 acc 0.7218 | val loss 0.5043 acc 0.8864 | lr 9.91e-04 | 12.1s
+epoch 008/100 | train loss 1.0572 acc 0.7884 | val loss 0.4996 acc 0.8998 | lr 9.88e-04 | 12.0s
+epoch 009/100 | train loss 1.0829 acc 0.7579 | val loss 0.5153 acc 0.8840 | lr 9.84e-04 | 11.9s
+epoch 010/100 | train loss 1.0631 acc 0.7688 | val loss 0.5094 acc 0.8908 | lr 9.80e-04 | 11.5s
+epoch 011/100 | train loss 1.0441 acc 0.7700 | val loss 0.4848 acc 0.8866 | lr 9.76e-04 | 11.3s
+epoch 012/100 | train loss 1.0798 acc 0.7578 | val loss 0.5372 acc 0.8842 | lr 9.70e-04 | 11.4s
+epoch 013/100 | train loss 1.0067 acc 0.7550 | val loss 0.4044 acc 0.8978 | lr 9.65e-04 | 11.4s
+epoch 014/100 | train loss 1.0491 acc 0.7653 | val loss 0.4385 acc 0.9046 | lr 9.59e-04 | 11.4s
+epoch 015/100 | train loss 0.9853 acc 0.7454 | val loss 0.4827 acc 0.8708 | lr 9.52e-04 | 11.4s
+epoch 016/100 | train loss 1.0687 acc 0.7568 | val loss 0.3967 acc 0.9036 | lr 9.46e-04 | 11.4s
+epoch 017/100 | train loss 1.0380 acc 0.7957 | val loss 0.5416 acc 0.8760 | lr 9.38e-04 | 11.4s
+epoch 018/100 | train loss 0.9988 acc 0.8029 | val loss 0.4742 acc 0.8960 | lr 9.30e-04 | 11.5s
+epoch 019/100 | train loss 1.0505 acc 0.8063 | val loss 0.4733 acc 0.9006 | lr 9.22e-04 | 11.7s
+epoch 020/100 | train loss 0.9684 acc 0.8045 | val loss 0.4176 acc 0.8960 | lr 9.14e-04 | 11.8s
+epoch 021/100 | train loss 1.0074 acc 0.7970 | val loss 0.4436 acc 0.8980 | lr 9.05e-04 | 12.4s
+epoch 022/100 | train loss 0.9472 acc 0.7842 | val loss 0.4397 acc 0.9042 | lr 8.95e-04 | 11.9s
+epoch 023/100 | train loss 0.9550 acc 0.7963 | val loss 0.4631 acc 0.9110 | lr 8.85e-04 | 11.6s
+epoch 024/100 | train loss 0.9890 acc 0.7716 | val loss 0.4629 acc 0.8994 | lr 8.75e-04 | 11.8s
+epoch 025/100 | train loss 0.9238 acc 0.8206 | val loss 0.4351 acc 0.9020 | lr 8.64e-04 | 11.7s
+epoch 026/100 | train loss 1.0154 acc 0.8036 | val loss 0.4665 acc 0.8944 | lr 8.54e-04 | 11.7s
+epoch 027/100 | train loss 0.9279 acc 0.7980 | val loss 0.4860 acc 0.8920 | lr 8.42e-04 | 11.5s
+epoch 028/100 | train loss 0.9782 acc 0.7684 | val loss 0.3749 acc 0.8940 | lr 8.31e-04 | 11.6s
+epoch 029/100 | train loss 0.9384 acc 0.7709 | val loss 0.4291 acc 0.9082 | lr 8.19e-04 | 11.7s
+epoch 030/100 | train loss 0.9561 acc 0.8071 | val loss 0.4011 acc 0.9138 | lr 8.06e-04 | 11.9s
+epoch 031/100 | train loss 0.9813 acc 0.7801 | val loss 0.4660 acc 0.9054 | lr 7.94e-04 | 12.4s
+epoch 032/100 | train loss 0.9257 acc 0.7826 | val loss 0.4297 acc 0.9048 | lr 7.81e-04 | 14.4s
+epoch 033/100 | train loss 0.9512 acc 0.8122 | val loss 0.4092 acc 0.9082 | lr 7.68e-04 | 14.2s
+epoch 034/100 | train loss 0.9675 acc 0.8056 | val loss 0.3711 acc 0.9050 | lr 7.55e-04 | 13.3s
+epoch 035/100 | train loss 0.9370 acc 0.8134 | val loss 0.3741 acc 0.9102 | lr 7.41e-04 | 12.5s
+epoch 036/100 | train loss 0.8865 acc 0.8009 | val loss 0.4654 acc 0.9046 | lr 7.27e-04 | 12.2s
+epoch 037/100 | train loss 0.8894 acc 0.7798 | val loss 0.3915 acc 0.9106 | lr 7.13e-04 | 12.1s
+epoch 038/100 | train loss 0.9181 acc 0.8500 | val loss 0.4169 acc 0.9068 | lr 6.99e-04 | 12.5s
+epoch 039/100 | train loss 0.9382 acc 0.8132 | val loss 0.4543 acc 0.9052 | lr 6.84e-04 | 12.8s
+epoch 040/100 | train loss 0.9216 acc 0.7995 | val loss 0.4207 acc 0.9086 | lr 6.69e-04 | 12.6s
+epoch 041/100 | train loss 0.9485 acc 0.8080 | val loss 0.3953 acc 0.9102 | lr 6.55e-04 | 12.2s
+epoch 042/100 | train loss 0.9120 acc 0.8077 | val loss 0.4145 acc 0.9162 | lr 6.39e-04 | 11.7s
+epoch 043/100 | train loss 0.9531 acc 0.8314 | val loss 0.3813 acc 0.9200 | lr 6.24e-04 | 11.7s
+epoch 044/100 | train loss 0.9224 acc 0.8307 | val loss 0.4111 acc 0.9104 | lr 6.09e-04 | 11.6s
+epoch 045/100 | train loss 0.9197 acc 0.8255 | val loss 0.4028 acc 0.9166 | lr 5.94e-04 | 11.6s
+epoch 046/100 | train loss 0.9154 acc 0.8073 | val loss 0.3900 acc 0.9154 | lr 5.78e-04 | 11.6s
+epoch 047/100 | train loss 0.9283 acc 0.8021 | val loss 0.4069 acc 0.9080 | lr 5.63e-04 | 11.6s
+epoch 048/100 | train loss 0.8918 acc 0.8217 | val loss 0.4498 acc 0.9050 | lr 5.47e-04 | 11.6s
+epoch 049/100 | train loss 0.8576 acc 0.8004 | val loss 0.4250 acc 0.9070 | lr 5.31e-04 | 11.9s
+epoch 050/100 | train loss 0.9382 acc 0.8372 | val loss 0.3614 acc 0.9224 | lr 5.16e-04 | 11.9s
+epoch 051/100 | train loss 0.9001 acc 0.8301 | val loss 0.4212 acc 0.9070 | lr 5.00e-04 | 11.8s
+epoch 052/100 | train loss 0.8560 acc 0.7772 | val loss 0.4041 acc 0.9164 | lr 4.84e-04 | 11.8s
+epoch 053/100 | train loss 0.8463 acc 0.8160 | val loss 0.3519 acc 0.9196 | lr 4.69e-04 | 11.9s
+epoch 054/100 | train loss 0.9083 acc 0.8273 | val loss 0.4201 acc 0.9170 | lr 4.53e-04 | 11.8s
+epoch 055/100 | train loss 0.9041 acc 0.8334 | val loss 0.4107 acc 0.9084 | lr 4.37e-04 | 11.8s
+epoch 056/100 | train loss 0.8992 acc 0.7918 | val loss 0.3727 acc 0.9096 | lr 4.22e-04 | 11.6s
+epoch 057/100 | train loss 0.8919 acc 0.7714 | val loss 0.4066 acc 0.9174 | lr 4.06e-04 | 11.6s
+epoch 058/100 | train loss 0.9023 acc 0.8543 | val loss 0.3913 acc 0.9134 | lr 3.91e-04 | 11.7s
+epoch 059/100 | train loss 0.8830 acc 0.8205 | val loss 0.3796 acc 0.9168 | lr 3.76e-04 | 11.8s
+epoch 060/100 | train loss 0.8936 acc 0.8454 | val loss 0.3888 acc 0.9164 | lr 3.61e-04 | 11.9s
+epoch 061/100 | train loss 0.8839 acc 0.7607 | val loss 0.3722 acc 0.9226 | lr 3.45e-04 | 11.9s
+epoch 062/100 | train loss 0.8277 acc 0.7910 | val loss 0.3604 acc 0.9180 | lr 3.31e-04 | 11.9s
+epoch 063/100 | train loss 0.8723 acc 0.8356 | val loss 0.4041 acc 0.9130 | lr 3.16e-04 | 11.8s
+epoch 064/100 | train loss 0.8706 acc 0.8276 | val loss 0.3954 acc 0.9148 | lr 3.01e-04 | 11.8s
+epoch 065/100 | train loss 0.9065 acc 0.8358 | val loss 0.4087 acc 0.9134 | lr 2.87e-04 | 11.9s
+epoch 066/100 | train loss 0.9117 acc 0.8272 | val loss 0.3873 acc 0.9220 | lr 2.73e-04 | 11.7s
+epoch 067/100 | train loss 0.8414 acc 0.8113 | val loss 0.3523 acc 0.9220 | lr 2.59e-04 | 11.7s
+epoch 068/100 | train loss 0.8669 acc 0.8399 | val loss 0.3987 acc 0.9144 | lr 2.45e-04 | 11.5s
+epoch 069/100 | train loss 0.8690 acc 0.8271 | val loss 0.3399 acc 0.9250 | lr 2.32e-04 | 11.6s
+epoch 070/100 | train loss 0.8882 acc 0.8175 | val loss 0.3998 acc 0.9178 | lr 2.19e-04 | 11.7s
+epoch 071/100 | train loss 0.8860 acc 0.8123 | val loss 0.3578 acc 0.9214 | lr 2.06e-04 | 11.5s
+epoch 072/100 | train loss 0.9030 acc 0.8465 | val loss 0.3548 acc 0.9250 | lr 1.94e-04 | 11.6s
+epoch 073/100 | train loss 0.8881 acc 0.8033 | val loss 0.3615 acc 0.9222 | lr 1.81e-04 | 11.6s
+epoch 074/100 | train loss 0.8390 acc 0.8632 | val loss 0.3575 acc 0.9224 | lr 1.69e-04 | 11.6s
+epoch 075/100 | train loss 0.8480 acc 0.8079 | val loss 0.3692 acc 0.9206 | lr 1.58e-04 | 11.8s
+epoch 076/100 | train loss 0.8696 acc 0.8112 | val loss 0.3666 acc 0.9216 | lr 1.46e-04 | 11.7s
+epoch 077/100 | train loss 0.8608 acc 0.8252 | val loss 0.3630 acc 0.9216 | lr 1.36e-04 | 11.7s
+epoch 078/100 | train loss 0.8650 acc 0.8336 | val loss 0.3566 acc 0.9222 | lr 1.25e-04 | 11.8s
+epoch 079/100 | train loss 0.8320 acc 0.8094 | val loss 0.3608 acc 0.9178 | lr 1.15e-04 | 12.4s
+epoch 080/100 | train loss 0.8042 acc 0.8155 | val loss 0.3473 acc 0.9208 | lr 1.05e-04 | 12.2s
+epoch 081/100 | train loss 0.8670 acc 0.8378 | val loss 0.3651 acc 0.9212 | lr 9.55e-05 | 12.0s
+epoch 082/100 | train loss 0.8621 acc 0.8348 | val loss 0.3719 acc 0.9240 | lr 8.65e-05 | 12.2s
+epoch 083/100 | train loss 0.8615 acc 0.8466 | val loss 0.3666 acc 0.9190 | lr 7.78e-05 | 12.1s
+epoch 084/100 | train loss 0.8488 acc 0.8016 | val loss 0.3496 acc 0.9246 | lr 6.96e-05 | 12.3s
+epoch 085/100 | train loss 0.8209 acc 0.8014 | val loss 0.3423 acc 0.9240 | lr 6.18e-05 | 12.3s
+epoch 086/100 | train loss 0.8519 acc 0.8656 | val loss 0.3540 acc 0.9254 | lr 5.45e-05 | 12.0s
+epoch 087/100 | train loss 0.8637 acc 0.8383 | val loss 0.3566 acc 0.9238 | lr 4.76e-05 | 11.9s
+epoch 088/100 | train loss 0.9014 acc 0.8626 | val loss 0.3571 acc 0.9264 | lr 4.11e-05 | 12.0s
+epoch 089/100 | train loss 0.8514 acc 0.8019 | val loss 0.3336 acc 0.9256 | lr 3.51e-05 | 11.9s
+epoch 090/100 | train loss 0.8337 acc 0.8435 | val loss 0.3596 acc 0.9210 | lr 2.96e-05 | 11.8s
+epoch 091/100 | train loss 0.8239 acc 0.8159 | val loss 0.3483 acc 0.9252 | lr 2.45e-05 | 11.9s
+epoch 092/100 | train loss 0.8896 acc 0.8480 | val loss 0.3522 acc 0.9242 | lr 1.99e-05 | 11.8s
+epoch 093/100 | train loss 0.8157 acc 0.8092 | val loss 0.3456 acc 0.9242 | lr 1.57e-05 | 11.8s
+epoch 094/100 | train loss 0.8074 acc 0.8315 | val loss 0.3533 acc 0.9238 | lr 1.20e-05 | 11.7s
+epoch 095/100 | train loss 0.8334 acc 0.7991 | val loss 0.3414 acc 0.9250 | lr 8.86e-06 | 11.8s
+epoch 096/100 | train loss 0.8432 acc 0.8405 | val loss 0.3578 acc 0.9230 | lr 6.16e-06 | 11.7s
+epoch 097/100 | train loss 0.8353 acc 0.8653 | val loss 0.3496 acc 0.9240 | lr 3.94e-06 | 11.6s
+epoch 098/100 | train loss 0.7965 acc 0.8080 | val loss 0.3588 acc 0.9230 | lr 2.22e-06 | 11.6s
+epoch 099/100 | train loss 0.8446 acc 0.8048 | val loss 0.3480 acc 0.9240 | lr 9.87e-07 | 11.6s
+epoch 100/100 | train loss 0.8182 acc 0.8191 | val loss 0.3467 acc 0.9242 | lr 2.47e-07 | 11.7s
+
+best epoch 88 | best val acc 0.9264
+best checkpoint val acc 0.9264 loss 0.3571
+test acc 0.9184 loss 0.3718
+
+val confusion (rows=true, cols=pred)
+            airplaneautomobile      bird       cat      deer       dog      frog     horse      ship     truck
+  airplane       487         2         0         3         2         0         2         0         3         1   acc=0.9740
+automobile         0       497         0         1         0         0         0         0         0         2   acc=0.9940
+      bird         2         0       483         8         4         2         0         0         1         0   acc=0.9660
+       cat         2         0         6       476         4         6         4         1         0         1   acc=0.9520
+      deer         2         0         7         8       481         1         1         0         0         0   acc=0.9620
+       dog         1         2         7       112        13       356         2         7         0         0   acc=0.7120
+      frog         6         0        13        12         4         0       464         0         1         0   acc=0.9280
+     horse         3         0         7        13        11         7         0       459         0         0   acc=0.9180
+      ship        25         6         3         0         1         0         0         0       460         5   acc=0.9200
+     truck         3        26         0         1         0         0         0         0         1       469   acc=0.9380
+
+test confusion (rows=true, cols=pred)
+            airplaneautomobile      bird       cat      deer       dog      frog     horse      ship     truck
+  airplane       981         1         5         2         2         0         0         1         7         1   acc=0.9810
+automobile         5       989         0         0         0         0         0         0         0         6   acc=0.9890
+      bird        13         0       947         9        19         3         9         0         0         0   acc=0.9470
+       cat         7         3        19       928        16        14         5         5         2         1   acc=0.9280
+      deer         0         0        13        10       964         3         6         4         0         0   acc=0.9640
+       dog         3         1        19       221        22       712        12        10         0         0   acc=0.7120
+      frog         3         1        29        28        11         1       927         0         0         0   acc=0.9270
+     horse         9         3        13        19        32         5         1       918         0         0   acc=0.9180
+      ship        54         8         8         2         0         0         1         1       917         9   acc=0.9170
+     truck        23        67         0         4         0         0         0         2         3       901   acc=0.9010

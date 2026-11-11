@@ -8,6 +8,7 @@ import torch.nn as nn
 from torch.amp import GradScaler
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.utils.data import Subset
 
 from model import build_model
 from src.cifar import build_cifar10_dataloaders, compute_cifar_stats
@@ -61,7 +62,45 @@ def parse_args():
     parser.add_argument(
         "--norm-std", nargs=3, type=float, default=None, metavar=("R", "G", "B")
     )
+    parser.add_argument(
+        "--class-weights",
+        choices=["none", "inverse", "effective"],
+        default="none",
+        help="class weighting for the training loss",
+    )
+    parser.add_argument(
+        "--effective-beta",
+        type=float,
+        default=0.9999,
+        help="beta for effective-number class weights",
+    )
+    parser.add_argument(
+        "--focal-gamma",
+        type=float,
+        default=0.0,
+        help="focal loss gamma (0 disables focal, uses weighted CE)",
+    )
     return parser.parse_args()
+
+
+def get_train_labels(loader) -> torch.Tensor:
+    ds = loader.dataset
+    if isinstance(ds, Subset):
+        return ds.dataset.labels[torch.tensor(ds.indices)]
+    return ds.labels
+
+
+def compute_class_weights(
+    labels: torch.Tensor, num_classes: int, mode: str, beta: float
+) -> torch.Tensor:
+    counts = torch.bincount(labels, minlength=num_classes).float()
+    if mode == "inverse":
+        weights = 1.0 / counts
+    elif mode == "effective":
+        weights = (1.0 - beta) / (1.0 - beta**counts)
+    else:
+        raise ValueError(f"unknown class weight mode: {mode}")
+    return weights * (counts.sum() / (weights * counts).sum())
 
 
 def print_confusion(confusion, classes, title):
@@ -121,7 +160,23 @@ def main() -> None:
         f"params={sum(p.numel() for p in model.parameters()):,}"
     )
 
-    criterion = nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
+    class_weights = None
+    if args.class_weights != "none":
+        train_labels = get_train_labels(train_loader)
+        counts = torch.bincount(train_labels, minlength=len(classes))
+        class_weights = compute_class_weights(
+            train_labels, len(classes), args.class_weights, args.effective_beta
+        ).to(device)
+        print(
+            f"class_weights={args.class_weights} beta={args.effective_beta}\n"
+            f"  counts={counts.tolist()}\n"
+            f"  weights={[round(w, 4) for w in class_weights.tolist()]}"
+        )
+
+    criterion = nn.CrossEntropyLoss(
+        weight=class_weights, label_smoothing=args.label_smoothing
+    )
+    eval_criterion = nn.CrossEntropyLoss()
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
     scaler = GradScaler(device.type, enabled=amp)
@@ -155,9 +210,12 @@ def main() -> None:
                 mixup_alpha=args.mixup_alpha,
                 cutmix_alpha=args.cutmix_alpha,
                 mix_prob=args.mix_prob,
+                class_weights=class_weights,
+                focal_gamma=args.focal_gamma,
+                label_smoothing=args.label_smoothing,
             )
             val_loss, val_acc, _ = evaluate(
-                model, val_loader, criterion, device, amp, len(classes)
+                model, val_loader, eval_criterion, device, amp, len(classes)
             )
             scheduler.step()
 
@@ -186,10 +244,10 @@ def main() -> None:
     model.load_state_dict(checkpoint["model"])
 
     val_loss, val_acc, val_confusion = evaluate(
-        model, val_loader, criterion, device, amp, len(classes)
+        model, val_loader, eval_criterion, device, amp, len(classes)
     )
     test_loss, test_acc, test_confusion = evaluate(
-        model, test_loader, criterion, device, amp, len(classes)
+        model, test_loader, eval_criterion, device, amp, len(classes)
     )
 
     print(f"\nbest epoch {best_epoch} | best val acc {best_acc:.4f}")

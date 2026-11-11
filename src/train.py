@@ -50,10 +50,42 @@ def cutmix_batch(images, targets, alpha):
     return mixed, targets, targets[index], lam
 
 
-def soft_cross_entropy(logits, targets_a, targets_b, lam):
+def focal_cross_entropy(
+    logits,
+    targets_a,
+    targets_b,
+    lam,
+    gamma,
+    class_weights=None,
+    label_smoothing=0.0,
+):
+    num_classes = logits.size(1)
+    log_probs = logits.float().log_softmax(dim=1)
+    probs = log_probs.exp()
+
+    targets = torch.zeros_like(probs)
+    targets.scatter_(1, targets_a[:, None], lam)
+    weight_b = (1.0 - lam) * torch.ones_like(targets_b, dtype=probs.dtype)
+    targets.scatter_add_(1, targets_b[:, None], weight_b[:, None])
+    if label_smoothing > 0.0:
+        targets = (1.0 - label_smoothing) * targets + label_smoothing / num_classes
+
+    ce = -(targets * log_probs).sum(dim=1)
+    pt = (targets * probs).sum(dim=1).clamp(max=1.0)
+    loss = (1.0 - pt).clamp(min=0.0) ** gamma * ce
+
+    if class_weights is not None:
+        loss = loss * (targets * class_weights).sum(dim=1)
+    return loss.mean()
+
+
+def soft_cross_entropy(logits, targets_a, targets_b, lam, class_weights=None):
     log_probs = logits.float().log_softmax(dim=1)
     loss_a = log_probs.gather(1, targets_a[:, None]).squeeze(1)
     loss_b = log_probs.gather(1, targets_b[:, None]).squeeze(1)
+    if class_weights is not None:
+        loss_a = loss_a * class_weights[targets_a]
+        loss_b = loss_b * class_weights[targets_b]
     return -(lam * loss_a + (1.0 - lam) * loss_b).mean()
 
 
@@ -71,6 +103,9 @@ def train_one_epoch(
     teacher=None,
     distill_temperature=3.0,
     distill_alpha=0.5,
+    class_weights=None,
+    focal_gamma=0.0,
+    label_smoothing=0.0,
 ):
     model.train()
     total_loss = 0.0
@@ -97,10 +132,25 @@ def train_one_epoch(
         optimizer.zero_grad(set_to_none=True)
         with autocast(device_type=device.type, dtype=torch.float16, enabled=amp):
             outputs = model(images)
-        if targets_a is not None:
-            loss = soft_cross_entropy(outputs, targets_a, targets_b, lam)
+        if focal_gamma > 0.0:
+            loss_a = targets_a if targets_a is not None else targets
+            loss_b = targets_b if targets_b is not None else targets
+            loss_lam = lam if targets_a is not None else 1.0
+            loss = focal_cross_entropy(
+                outputs,
+                loss_a,
+                loss_b,
+                loss_lam,
+                focal_gamma,
+                class_weights=class_weights,
+                label_smoothing=label_smoothing,
+            )
+        elif targets_a is not None:
+            loss = soft_cross_entropy(
+                outputs, targets_a, targets_b, lam, class_weights=class_weights
+            )
         else:
-            loss = criterion(outputs, targets)
+            loss = criterion(outputs.float(), targets)
 
         if teacher is not None:
             with torch.no_grad(), autocast(

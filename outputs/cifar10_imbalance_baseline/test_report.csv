@@ -1,0 +1,16 @@
+metric,value
+best_epoch,89
+val_acc,0.9154
+val_loss,0.7658
+test_acc,0.9081
+test_loss,0.7791
+test_acc_airplane,0.9870
+test_acc_automobile,0.9930
+test_acc_bird,0.9670
+test_acc_cat,0.9480
+test_acc_deer,0.9720
+test_acc_dog,0.6270
+test_acc_frog,0.9200
+test_acc_horse,0.8860
+test_acc_ship,0.9090
+test_acc_truck,0.8720
